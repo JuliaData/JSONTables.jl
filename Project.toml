@@ -1,0 +1,4 @@
+name = "JSONTables"
+uuid = "b9914132-a727-11e9-1322-f18e41205b0b"
+authors = ["Jacob Quinn <quinn.jacobd@gmail.com>"]
+version = "0.1.0"
