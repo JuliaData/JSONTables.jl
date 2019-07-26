@@ -47,4 +47,11 @@ rjtable = JSONTables.jsontable(rjson)
 @test JSONTables.arraytable(ctable) == rjson
 @test JSONTables.arraytable(rtable) == rjson
 
+io = IOBuffer()
+JSONTables.objecttable(io, ctable)
+@test String(take!(io)) == cjson
+
+JSONTables.arraytable(io, rtable)
+@test String(take!(io)) == rjson
+
 end

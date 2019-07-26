@@ -75,6 +75,8 @@ function Base.iterate(x::ArrayTable, st)
 end
 
 objecttable(table) = JSON3.write(ObjectTable(Tables.columns(table)))
+objecttable(io::IO, table) = JSON3.write(io, ObjectTable(Tables.columns(table)))
 arraytable(table) = JSON3.write(ArrayTable(Tables.rows(table)))
+arraytable(io::IO, table) = JSON3.write(io, ArrayTable(Tables.rows(table)))
 
 end # module
