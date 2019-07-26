@@ -2,7 +2,7 @@ module JSONTables
 
 using JSON3, Tables
 
-export jsontable
+export jsontable, arraytable, objecttable
 
 # read
 
