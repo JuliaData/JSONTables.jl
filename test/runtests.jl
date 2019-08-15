@@ -4,17 +4,17 @@ using Test, JSONTables, Tables, JSON3
 
 cjson = replace(replace("""{
 "a": [1,2,3],
-"b": [4.1, 5.2, 6.3],
-"c": ["7", "8", "9"]
+"b": [4.1, null, 6.3],
+"c": ["7", "8", null]
 }""", " "=>""), "\n"=>"")
 
 rjson = replace(replace("""[
 {"a": 1, "b": 4.1, "c": "7"},
-{"a": 2, "b": 5.2, "c": "8"},
-{"a": 3, "b": 6.3, "c": "9"}
+{"a": 2, "b": null, "c": "8"},
+{"a": 3, "b": 6.3, "c": null}
 ]""", " "=>""), "\n"=>"")
 
-ctable = (a=[1,2,3], b=[4.1, 5.2, 6.3], c=["7", "8", "9"])
+ctable = (a=[1,2,3], b=[4.1, missing, 6.3], c=["7", "8", missing])
 rtable = Tables.rowtable(ctable)
 
 cjtable = JSONTables.jsontable(cjson)
@@ -37,10 +37,10 @@ rjtable = JSONTables.jsontable(rjson)
 @test Base.IteratorEltype(typeof(rjtable)) == Base.HasEltype()
 @test eltype(rjtable) == Any
 
-@test Tables.columntable(cjtable) == ctable
-@test Tables.columntable(rjtable) == ctable
-@test Tables.rowtable(cjtable) == rtable
-@test Tables.rowtable(rjtable) == rtable
+@test isequal(Tables.columntable(cjtable), ctable)
+@test isequal(Tables.columntable(rjtable), ctable)
+@test isequal(Tables.rowtable(cjtable), rtable)
+@test isequal(Tables.rowtable(rjtable), rtable)
 
 @test JSONTables.objecttable(ctable) == cjson
 @test JSONTables.objecttable(rtable) == cjson
