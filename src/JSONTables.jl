@@ -31,7 +31,7 @@ Base.IndexStyle(::Type{<:MissingVector}) = Base.IndexLinear()
 # Base.length(x::MissingVector) = length(x.x)
 Base.size(x::MissingVector) = size(x.x)
 @inline Base.getindex(x::MissingVector, i::Int) = miss(x.x[i])
-Base.copy(x::MissingVector) = map(y->miss(copy(y)), x)
+Base.copy(x::MissingVector) = map(y->y isa JSON3.Object || y isa JSON3.Array ? copy(y) : miss(y), x)
 
 Base.propertynames(x::Table{true}) = Tuple(keys(getfield(x, :source)))
 Base.getproperty(x::Table{true}, nm::Symbol) = MissingVector(getproperty(getfield(x, :source), nm))
