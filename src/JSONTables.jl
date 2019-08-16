@@ -23,8 +23,18 @@ Tables.istable(::Type{<:Table}) = true
 Tables.columnaccess(::Type{Table{true, T}}) where {T} = true
 Tables.columns(x::Table{true}) = x
 
+miss(x) = ifelse(x === nothing, missing, x)
+struct MissingVector{T} <: AbstractVector{T}
+    x::T
+end
+Base.IndexStyle(::Type{<:MissingVector}) = Base.IndexLinear()
+# Base.length(x::MissingVector) = length(x.x)
+Base.size(x::MissingVector) = size(x.x)
+@inline Base.getindex(x::MissingVector, i::Int) = miss(x.x[i])
+Base.copy(x::MissingVector) = map(y->y isa JSON3.Object || y isa JSON3.Array ? copy(y) : miss(y), x)
+
 Base.propertynames(x::Table{true}) = Tuple(keys(getfield(x, :source)))
-Base.getproperty(x::Table{true}, nm::Symbol) = getproperty(getfield(x, :source), nm)
+Base.getproperty(x::Table{true}, nm::Symbol) = MissingVector(getproperty(getfield(x, :source), nm))
 
 # row source
 Tables.rowaccess(::Type{Table{false, T}}) where {T} = true
@@ -35,8 +45,25 @@ Base.length(x::Table{false}) = length(x.source)
 Base.IteratorEltype(::Type{Table{false, T}}) where {T} = Base.HasEltype()
 Base.eltype(x::Table{false, JSON3.Array{T}}) where {T} = T
 
-Base.iterate(x::Table{false}) = iterate(x.source)
-Base.iterate(x::Table{false}, st) = iterate(x.source, st)
+struct MissingRow{T}
+    x::T
+end
+Base.propertynames(x::MissingRow) = propertynames(getfield(x, :x))
+Base.getproperty(x::MissingRow, nm::Symbol) = miss(getproperty(getfield(x, :x), nm))
+
+@inline function Base.iterate(x::Table{false})
+    st = iterate(x.source)
+    st === nothing && return nothing
+    val, state = st
+    return MissingRow(val), state
+end
+
+@inline function Base.iterate(x::Table{false}, st)
+    st = iterate(x.source, st)
+    st === nothing && return nothing
+    val, state = st
+    return MissingRow(val), state
+end
 
 # write
 struct ObjectTable{T}
