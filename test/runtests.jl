@@ -2,18 +2,6 @@ using Test, JSONTables, Tables, JSON3
 
 @testset "JSONTables" begin
 
-DataFrame(jsontable("""{
-"a": [1,2,3],
-"b": [4.1, null, 6.3],
-"c": ["7", "8", null]
-}"""))
-
-DataFrame(jsontable("""[
-{"a": 1, "b": 4.1, "c": "7"},
-{"a": 2, "b": null, "c": "8"},
-{"a": 3, "b": 6.3, "c": null}
-]"""))
-
 cjson = replace(replace("""{
 "a": [1,2,3],
 "b": [4.1, 5.2, 6.3],
