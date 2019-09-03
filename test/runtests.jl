@@ -54,4 +54,15 @@ JSONTables.objecttable(io, ctable)
 JSONTables.arraytable(io, rtable)
 @test String(take!(io)) == rjson
 
+# #7
+text = """{
+        "color_scheme": "Packages/Color Scheme - Default/Mariana.sublime-color-scheme",
+        "dictionary": "Packages/Language - English/en_US.dic",
+        "draw_white_space": "all",
+        "font_face": "monospace 821",
+        "font_size": "10",
+        "theme": "Adaptive.sublime-theme"
+}"""
+@test_throws ArgumentError JSONTables.jsontable(text)
+
 end
