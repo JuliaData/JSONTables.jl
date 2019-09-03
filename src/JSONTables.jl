@@ -12,7 +12,7 @@ end
 
 function jsontable(source)
     x = JSON3.read(source)
-    columnar = x isa JSON3.Object
+    columnar = x isa JSON3.Object && first(x)[2] isa AbstractArray
     columnar || x isa JSON3.Array || throw(ArgumentError("input json source is not a table"))
     return Table{columnar, typeof(x)}(x)
 end

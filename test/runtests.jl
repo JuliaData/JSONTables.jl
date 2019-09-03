@@ -2,6 +2,18 @@ using Test, JSONTables, Tables, JSON3
 
 @testset "JSONTables" begin
 
+DataFrame(jsontable("""{
+"a": [1,2,3],
+"b": [4.1, null, 6.3],
+"c": ["7", "8", null]
+}"""))
+
+DataFrame(jsontable("""[
+{"a": 1, "b": 4.1, "c": "7"},
+{"a": 2, "b": null, "c": "8"},
+{"a": 3, "b": 6.3, "c": null}
+]"""))
+
 cjson = replace(replace("""{
 "a": [1,2,3],
 "b": [4.1, 5.2, 6.3],
@@ -53,5 +65,16 @@ JSONTables.objecttable(io, ctable)
 
 JSONTables.arraytable(io, rtable)
 @test String(take!(io)) == rjson
+
+# #7
+text = """{
+        "color_scheme": "Packages/Color Scheme - Default/Mariana.sublime-color-scheme",
+        "dictionary": "Packages/Language - English/en_US.dic",
+        "draw_white_space": "all",
+        "font_face": "monospace 821",
+        "font_size": "10",
+        "theme": "Adaptive.sublime-theme"
+}"""
+@test_throws ArgumentError JSONTables.jsontable(text)
 
 end
