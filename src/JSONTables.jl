@@ -11,8 +11,14 @@ struct Table{columnar, T}
 end
 
 function jsontable(source)
-    x = JSON3.read(source)
+    x = !(source isa JSON3.Object || source isa JSON3.Array) ? JSON3.read(source) : source
     columnar = x isa JSON3.Object && first(x)[2] isa AbstractArray
+    columnar || x isa JSON3.Array || throw(ArgumentError("input json source is not a table"))
+    return Table{columnar, typeof(x)}(x)
+end
+
+function jsontable(x::JSON3.Object)
+    columnar = first(x)[2] isa AbstractArray
     columnar || x isa JSON3.Array || throw(ArgumentError("input json source is not a table"))
     return Table{columnar, typeof(x)}(x)
 end
