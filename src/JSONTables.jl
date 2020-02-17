@@ -1,6 +1,6 @@
 module JSONTables
 
-using JSON3, Tables
+using StructTypes, JSON3, Tables
 
 export jsontable, arraytable, objecttable
 
@@ -42,6 +42,10 @@ Base.copy(x::MissingVector) = map(y->y isa JSON3.Object || y isa JSON3.Array ? c
 Base.propertynames(x::Table{true}) = Tuple(keys(getfield(x, :source)))
 Base.getproperty(x::Table{true}, nm::Symbol) = MissingVector(getproperty(getfield(x, :source), nm))
 
+Tables.columnnames(x::Table{true}) = propertynames(x)
+Tables.getcolumn(x::Table{true}, i::Int) = getproperty(x, propertynames(x)[i])
+Tables.getcolumn(x::Table{true}, nm::Symbol) = getproperty(x, nm)
+
 # row source
 Tables.rowaccess(::Type{Table{false, T}}) where {T} = true
 Tables.rows(x::Table{false}) = x
@@ -51,11 +55,13 @@ Base.length(x::Table{false}) = length(x.source)
 Base.IteratorEltype(::Type{Table{false, T}}) where {T} = Base.HasEltype()
 Base.eltype(x::Table{false, JSON3.Array{T}}) where {T} = T
 
-struct MissingRow{T}
+struct MissingRow{T} <: Tables.AbstractRow
     x::T
 end
-Base.propertynames(x::MissingRow) = propertynames(getfield(x, :x))
-Base.getproperty(x::MissingRow, nm::Symbol) = miss(getproperty(getfield(x, :x), nm))
+
+Tables.columnnames(x::MissingRow) = propertynames(getfield(x, :x))
+Tables.getcolumn(x::MissingRow, nm::Symbol) = miss(getproperty(getfield(x, :x), nm))
+Tables.getcolumn(x::MissingRow, i::Int) = getproperty(x, propertynames(x)[i])
 
 @inline function Base.iterate(x::Table{false})
     st = iterate(x.source)
@@ -76,21 +82,21 @@ struct ObjectTable{T}
     x::T
 end
 
-JSON3.StructType(::Type{<:ObjectTable}) = JSON3.ObjectType()
-Base.pairs(x::ObjectTable) = zip(propertynames(x.x), Tables.eachcolumn(x.x))
+StructTypes.StructType(::Type{<:ObjectTable}) = StructTypes.DictType()
+Base.pairs(x::ObjectTable) = zip(Tables.columnnames(x.x), Tables.Columns(x.x))
 
 struct ArrayTable{T}
     x::T
 end
 
-JSON3.StructType(::Type{<:ArrayTable}) = JSON3.ArrayType()
+StructTypes.StructType(::Type{<:ArrayTable}) = StructTypes.ArrayType()
 
 struct ArrayRow{T}
     x::T
 end
 
-JSON3.StructType(::Type{<:ArrayRow}) = JSON3.ObjectType()
-Base.pairs(x::ArrayRow) = zip(propertynames(x.x), Tables.eachcolumn(x.x))
+StructTypes.StructType(::Type{<:ArrayRow}) = StructTypes.DictType()
+Base.pairs(x::ArrayRow) = zip(Tables.columnnames(x.x), Tables.Columns(x.x))
 
 Base.IteratorSize(::Type{ArrayTable{T}}) where {T} = IteratorSize(T)
 Base.length(x::ArrayTable) = length(x.x)

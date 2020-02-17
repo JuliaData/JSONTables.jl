@@ -1,8 +1,8 @@
 # JSONTables.jl
 
-A package that provides a JSON integration with the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface, that is, it provides the `jsontable` function as a way to treat a JSON object of arrays, or a JSON array of objects, as a Tables.jl-compatible source. This allows, among other things, loading JSON "tabular" data into a DataFrame, or a JuliaDB table, or written out directly as a csv file.
+A package that provides a JSON integration with the [Tables.jl](https://github.com/JuliaData/Tables.jl) interface, that is, it provides the `jsontable` function as a way to treat a JSON object of arrays, or a JSON array of objects, as a Tables.jl-compatible source. This allows, among other things, loading JSON "tabular" data into a `DataFrame`, or a JuliaDB.jl table, or written out directly as a csv file.
 
-JSONTables.jl also provides two "write" functions, `objecttable` and `arraytable`, for taking any Tables.jl-comptabile source (e.g. DataFrame, ODBC.Query, etc.) and writing the table out either as a JSON object of arrays, or array of objects, respectively.
+JSONTables.jl also provides two "write" functions, `objecttable` and `arraytable`, for taking any Tables.jl-comptabile source (e.g. `DataFrame`, `CSV.File`, etc.) and writing the table out either as a JSON object of arrays, or array of objects, respectively.
 
 So in short:
 ```julia
