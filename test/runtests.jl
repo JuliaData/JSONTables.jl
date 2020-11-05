@@ -65,4 +65,20 @@ text = """{
 }"""
 @test_throws ArgumentError JSONTables.jsontable(text)
 
+nonhomogenous = """
+[
+    {"a": 1, "b": 2, "c": 3},
+    {"b": 4, "c": null, "d": 5},
+    {"a": 6, "d": 7},
+    {"a": 8, "b": 9, "c": 10, "d": null},
+    {"d": 11, "c": 10, "b": 9, "a": 8}
+]
+"""
+
+jt = JSONTables.jsontable(nonhomogenous)
+@test Tables.schema(jt).names == (:a, :b, :c, :d)
+ct = Tables.columntable(jt)
+@test isequal(ct.a, [1, missing, 6, 8, 8])
+@test isequal(ct.d, [missing, 5, 7, missing, 11])
+
 end
