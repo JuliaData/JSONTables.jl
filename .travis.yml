@@ -1,33 +1,29 @@
+# Documentation: http://docs.travis-ci.com/user/languages/julia/
 language: julia
-
-sudo: false
 
 os:
   - linux
   - osx
   - windows
 
-arch:
-  - x64
-  - x86
-
 julia:
   - 1.0
-  - 1.3
+  - 1
   - nightly
 
-env:
-  - JULIA_PROJECT="@."
+branches:
+  only:
+  - master
+  - gh-pages # For building documentation
+  - /^testing-.*$/ # testing branches
+  - /^v[0-9]+\.[0-9]+\.[0-9]+$/ # version tags
 
-matrix:
-  exclude:
-    - os: osx
-      arch: x86
+jobs:
   allow_failures:
-  - julia: nightly
+    - julia: nightly
 
 notifications:
   email: false
 
 after_success:
-   - julia -e 'ENV["TRAVIS_JULIA_VERSION"] == "1.3" && ENV["TRAVIS_OS_NAME"] != "linux" && exit(); using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'
+   - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(Codecov.process_folder())'

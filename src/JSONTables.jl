@@ -7,23 +7,71 @@ export jsontable, arraytable, objecttable
 # read
 
 struct Table{columnar, T}
+    names::Vector{Symbol}
+    types::Dict{Symbol, Type}
     source::T
 end
 
-function jsontable(source)
-    x = !(source isa JSON3.Object || source isa JSON3.Array) ? JSON3.read(source) : source
-    columnar = x isa JSON3.Object && first(x)[2] isa AbstractArray
-    columnar || x isa JSON3.Array || throw(ArgumentError("input json source is not a table"))
-    return Table{columnar, typeof(x)}(x)
-end
+jsontable(source) = jsontable(JSON3.read(source))
+
+misselT(::Type{T}) where {T} = T
+misselT(::Type{Union{Nothing, T}}) where {T} = Union{Missing, T}
 
 function jsontable(x::JSON3.Object)
-    columnar = first(x)[2] isa AbstractArray
-    columnar || x isa JSON3.Array || throw(ArgumentError("input json source is not a table"))
-    return Table{columnar, typeof(x)}(x)
+    names = Symbol[]
+    types = Dict{Symbol, Type}()
+    len = 0
+    for (k, v) in x
+        push!(names, k)
+        v isa JSON3.Array || throw(ArgumentError("input `JSON3.Object` must only have `JSON3.Array` values to be considered a table"))
+        (len == 0 || len == length(v)) || throw(ArgumentError("all value `JSON3.Array`s must have the same length to be a valid table"))
+        len = length(v)
+        types[k] = misselT(eltype(v))
+    end
+    return Table{true, typeof(x)}(names, types, x)
+end
+
+jsontable(x::JSON3.Array) = throw(ArgumentError("input `JSON3.Array` must only have `JSON3.Object` elements to be considered a table"))
+missT(::Type{Nothing}) = Missing
+missT(::Type{T}) where {T} = T
+
+function jsontable(x::JSON3.Array{JSON3.Object})
+    names = Symbol[]
+    seen = Set{Symbol}()
+    types = Dict{Symbol, Type}()
+    for row in x
+        if isempty(names)
+            for (k, v) in row
+                push!(names, k)
+                types[k] = missT(typeof(v))
+            end
+            seen = Set(names)
+        else
+            for nm in names
+                if haskey(row, nm)
+                    T = types[nm]
+                    v = get(row, nm)
+                    if !(missT(typeof(v)) <: T)
+                        types[nm] = Union{T, missT(typeof(v))}
+                    end
+                else
+                    types[nm] = Union{Missing, types[nm]}
+                end
+            end
+            for (k, v) in row
+                if !(k in seen)
+                    push!(seen, k)
+                    push!(names, k)
+                    types[k] = missT(typeof(v))
+                end
+            end
+        end
+    end
+    return Table{false, typeof(x)}(names, types, x)
 end
 
 Tables.istable(::Type{<:Table}) = true
+Tables.schema(x::Table) = Tables.Schema(getfield(x, :names), values(getfield(x, :types)))
 
 # columnar source
 Tables.columnaccess(::Type{Table{true, T}}) where {T} = true
@@ -34,7 +82,6 @@ struct MissingVector{T} <: AbstractVector{T}
     x::T
 end
 Base.IndexStyle(::Type{<:MissingVector}) = Base.IndexLinear()
-# Base.length(x::MissingVector) = length(x.x)
 Base.size(x::MissingVector) = size(x.x)
 @inline Base.getindex(x::MissingVector, i::Int) = miss(x.x[i])
 Base.copy(x::MissingVector) = map(y->y isa JSON3.Object || y isa JSON3.Array ? copy(y) : miss(y), x)
@@ -56,25 +103,20 @@ Base.IteratorEltype(::Type{Table{false, T}}) where {T} = Base.HasEltype()
 Base.eltype(x::Table{false, JSON3.Array{T}}) where {T} = T
 
 struct MissingRow{T} <: Tables.AbstractRow
+    names::Vector{Symbol}
     x::T
 end
 
-Tables.columnnames(x::MissingRow) = propertynames(getfield(x, :x))
-Tables.getcolumn(x::MissingRow, nm::Symbol) = miss(getproperty(getfield(x, :x), nm))
-Tables.getcolumn(x::MissingRow, i::Int) = getproperty(x, propertynames(x)[i])
+getmiss(x, nm) = haskey(x, nm) ? miss(getproperty(x, nm)) : missing
+Tables.columnnames(x::MissingRow) = getfield(x, :names)
+Tables.getcolumn(x::MissingRow, nm::Symbol) = getmiss(getfield(x, :x), nm)
+Tables.getcolumn(x::MissingRow, i::Int) = getmiss(getfield(x, :x), getfield(x, :names)[i])
 
-@inline function Base.iterate(x::Table{false})
-    st = iterate(x.source)
+@inline function Base.iterate(x::Table{false}, st=())
+    st = iterate(x.source, st...)
     st === nothing && return nothing
     val, state = st
-    return MissingRow(val), state
-end
-
-@inline function Base.iterate(x::Table{false}, st)
-    st = iterate(x.source, st)
-    st === nothing && return nothing
-    val, state = st
-    return MissingRow(val), state
+    return MissingRow(x.names, val), (state,)
 end
 
 # write
@@ -101,16 +143,10 @@ Base.pairs(x::ArrayRow) = zip(Tables.columnnames(x.x), Tables.Columns(x.x))
 Base.IteratorSize(::Type{ArrayTable{T}}) where {T} = IteratorSize(T)
 Base.length(x::ArrayTable) = length(x.x)
 
-function Base.iterate(x::ArrayTable)
-    state = iterate(x.x)
+function Base.iterate(x::ArrayTable, st=())
+    state = iterate(x.x, st...)
     state === nothing && return nothing
-    return ArrayRow(state[1]), state[2]
-end
-
-function Base.iterate(x::ArrayTable, st)
-    state = iterate(x.x, st)
-    state === nothing && return nothing
-    return ArrayRow(state[1]), state[2]
+    return ArrayRow(state[1]), (state[2],)
 end
 
 objecttable(table) = JSON3.write(ObjectTable(Tables.columns(table)))
