@@ -50,7 +50,7 @@ function jsontable(x::JSON3.Array{JSON3.Object})
             for nm in names
                 if haskey(row, nm)
                     T = types[nm]
-                    v = get(row, nm)
+                    v = row[nm]
                     if !(missT(typeof(v)) <: T)
                         types[nm] = Union{T, missT(typeof(v))}
                     end
@@ -138,7 +138,7 @@ struct ArrayRow{T}
 end
 
 StructTypes.StructType(::Type{<:ArrayRow}) = StructTypes.DictType()
-Base.pairs(x::ArrayRow) = zip(Tables.columnnames(x.x), Tables.Columns(x.x))
+Base.pairs(x::ArrayRow) = ((nm, Tables.getcolumn(x.x, nm)) for nm in Tables.columnnames(x.x))
 
 Base.IteratorSize(::Type{ArrayTable{T}}) where {T} = IteratorSize(T)
 Base.length(x::ArrayTable) = length(x.x)
