@@ -71,7 +71,7 @@ function jsontable(x::JSON3.Array{JSON3.Object})
 end
 
 Tables.istable(::Type{<:Table}) = true
-Tables.schema(x::Table) = Tables.Schema(getfield(x, :names), values(getfield(x, :types)))
+Tables.schema(x::Table) = Tables.Schema(getfield(x, :names), [getfield(x, :types)[nm] for nm in getfield(x, :names)])
 
 # columnar source
 Tables.columnaccess(::Type{Table{true, T}}) where {T} = true
