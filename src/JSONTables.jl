@@ -149,8 +149,8 @@ function Base.iterate(x::ArrayTable, st=())
     return ArrayRow(state[1]), (state[2],)
 end
 
-objecttable(table) = JSON3.write(ObjectTable(Tables.Columns(table)))
-objecttable(io::IO, table) = JSON3.write(io, ObjectTable(Tables.Columns(table)))
+objecttable(table) = JSON3.write(ObjectTable(Tables.Columns(Tables.columns(table))))
+objecttable(io::IO, table) = JSON3.write(io, ObjectTable(Tables.Columns(Tables.columns(table))))
 arraytable(table) = JSON3.write(ArrayTable(Tables.rows(table)))
 arraytable(io::IO, table) = JSON3.write(io, ArrayTable(Tables.rows(table)))
 
