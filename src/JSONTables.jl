@@ -125,7 +125,7 @@ struct ObjectTable{T}
 end
 
 StructTypes.StructType(::Type{<:ObjectTable}) = StructTypes.DictType()
-Base.pairs(x::ObjectTable) = zip(Tables.columnnames(x.x), Tables.Columns(x.x))
+Base.pairs(x::ObjectTable) = zip(Tables.columnnames(x.x), x.x)
 
 struct ArrayTable{T}
     x::T
@@ -149,8 +149,8 @@ function Base.iterate(x::ArrayTable, st=())
     return ArrayRow(state[1]), (state[2],)
 end
 
-objecttable(table) = JSON3.write(ObjectTable(Tables.columns(table)))
-objecttable(io::IO, table) = JSON3.write(io, ObjectTable(Tables.columns(table)))
+objecttable(table) = JSON3.write(ObjectTable(Tables.Columns(table)))
+objecttable(io::IO, table) = JSON3.write(io, ObjectTable(Tables.Columns(table)))
 arraytable(table) = JSON3.write(ArrayTable(Tables.rows(table)))
 arraytable(io::IO, table) = JSON3.write(io, ArrayTable(Tables.rows(table)))
 
