@@ -62,7 +62,7 @@ function jsontable(x::JSON3.Array{JSON3.Object})
                 if !(k in seen)
                     push!(seen, k)
                     push!(names, k)
-                    types[k] = missT(typeof(v))
+                    types[k] = Union{Missing, missT(typeof(v))}
                 end
             end
         end

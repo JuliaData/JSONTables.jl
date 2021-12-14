@@ -81,4 +81,15 @@ ct = Tables.columntable(jt)
 @test isequal(ct.a, [1, missing, 6, 8, 8])
 @test isequal(ct.d, [missing, 5, 7, missing, 11])
 
+new_field_in_last_row = """
+[
+    {"a": 1, "b": 2},
+    {"b": 4, "c": 8}
+]
+"""
+
+jt = JSONTables.jsontable(new_field_in_last_row)
+ct = Tables.columntable(jt)
+@test isequal(ct.c, [missing, 8])
+
 end
