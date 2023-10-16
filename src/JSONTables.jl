@@ -12,7 +12,7 @@ struct Table{columnar, T}
     source::T
 end
 
-jsontable(source) = jsontable(JSON3.read(source))
+jsontable(source; kwargs...) = jsontable(JSON3.read(source; kwargs...))
 
 misselT(::Type{T}) where {T} = T
 misselT(::Type{Union{Nothing, T}}) where {T} = Union{Missing, T}
