@@ -92,4 +92,10 @@ jt = JSONTables.jsontable(new_field_in_last_row)
 ct = Tables.columntable(jt)
 @test isequal(ct.c, [missing, 8])
 
+# jsontable(::Vector{JSON3.Object}) test
+jstrs = JSON3.write.([Dict("a"=>rand(), "b"=>-rand()) for _ in 1:50])
+js = JSON3.read.(jstrs)
+jt = jsontable(js)
+@test jt isa JSONTables.Table
+
 end
