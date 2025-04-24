@@ -35,7 +35,7 @@ jsontable(x::JSON3.Array) = throw(ArgumentError("input `JSON3.Array` must only h
 missT(::Type{Nothing}) = Missing
 missT(::Type{T}) where {T} = T
 
-function jsontable(x::JSON3.Array{JSON3.Object})
+function jsontable(x::AbstractVector{JSON3.Object})
     names = Symbol[]
     seen = Set{Symbol}()
     types = Dict{Symbol, Type}()
