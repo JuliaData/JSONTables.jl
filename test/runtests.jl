@@ -92,4 +92,43 @@ jt = JSONTables.jsontable(new_field_in_last_row)
 ct = Tables.columntable(jt)
 @test isequal(ct.c, [missing, 8])
 
+@testset "row inputs and empty initial rows" begin
+    text = "[{\"a\":1,\"b\":2},{\"a\":3,\"b\":4}]"
+    parsed = JSON3.read(text)
+    concrete = typeof(parsed[1])[parsed...]
+    expected_columns = (a=[1, 3], b=[2, 4])
+    expected_rows = Tables.rowtable(expected_columns)
+    for input in (text, Vector{UInt8}(codeunits(text)), IOBuffer(text), parsed,
+                  JSON3.Object[parsed...], concrete, view(concrete, 1:2))
+        table = JSONTables.jsontable(input)
+        @test Tables.schema(table).names == (:a, :b)
+        @test Tables.columntable(table) == expected_columns
+        @test Tables.rowtable(table) == expected_rows
+    end
+    for text in ("[]", "[1,2]", "[{},1]", "[null]")
+        for input in (text, Vector{UInt8}(codeunits(text)), JSON3.read(text))
+            @test_throws ArgumentError JSONTables.jsontable(input)
+        end
+    end
+    for text in ("[{},{\"a\":1}]", "[{},{},{\"a\":1}]", "[{},{\"a\":null},{\"a\":1}]")
+        parsed = JSON3.read(text)
+        expected = [haskey(row, :a) && row.a !== nothing ? row.a : missing for row in parsed]
+        for input in (text, parsed, JSON3.Object[parsed...])
+            table = JSONTables.jsontable(input)
+            @test Missing <: Tables.schema(table).types[1]
+            @test isequal(Tables.columntable(table).a, expected)
+            @test isequal(getproperty.(Tables.rowtable(table), :a), expected)
+        end
+    end
+    table = JSONTables.jsontable("[{\"a\":1},{\"a\":2}]")
+    @test Tables.schema(table).types[1] === typeof(JSON3.read("{\"a\":1}").a)
+    table = JSONTables.jsontable("[{\"a\":1},{\"b\":2}]")
+    @test isequal(Tables.columntable(table), (a=[1, missing], b=[missing, 2]))
+    table = JSONTables.jsontable(JSON3.Object[])
+    @test length(table) == 0
+    @test Tables.schema(table).names == ()
+    table = JSONTables.jsontable("[{\"a\":NaN}]"; allow_inf=true)
+    @test isnan(Tables.columntable(table).a[1])
+end
+
 end
