@@ -15,6 +15,9 @@ end
 jsontable(source; kwargs...) = jsontable(JSON3.read(source; kwargs...))
 
 misselT(::Type{T}) where {T} = T
+# Empty columns have no inferred value type for a table schema.
+misselT(::Type{Union{}}) = Any
+misselT(::Type{Nothing}) = Missing
 misselT(::Type{Union{Nothing, T}}) where {T} = Union{Missing, T}
 
 function jsontable(x::JSON3.Object)
@@ -24,7 +27,7 @@ function jsontable(x::JSON3.Object)
     for (k, v) in x
         push!(names, k)
         v isa JSON3.Array || throw(ArgumentError("input `JSON3.Object` must only have `JSON3.Array` values to be considered a table"))
-        (len == 0 || len == length(v)) || throw(ArgumentError("all value `JSON3.Array`s must have the same length to be a valid table"))
+        (length(names) == 1 || len == length(v)) || throw(ArgumentError("all value `JSON3.Array`s must have the same length to be a valid table"))
         len = length(v)
         types[k] = misselT(eltype(v))
     end
