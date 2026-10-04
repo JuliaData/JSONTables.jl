@@ -160,4 +160,21 @@ end
     end
 end
 
+@testset "column element types" begin
+    for (text, expected) in (("{\"a\":[1,2]}", [1,2]),
+                             ("{\"a\":[1,null,2]}", [1,missing,2]),
+                             ("{\"a\":[null,null]}", [missing,missing]),
+                             ("{\"a\":[\"x\",\"y\"]}", ["x","y"]),
+                             ("{\"a\":[]}", Any[]),
+                             ("{\"a\":[{\"b\":1},{\"b\":2}]}", [Dict(:b=>1),Dict(:b=>2)]),
+                             ("{\"a\":[[1,2],[3,4]]}", [[1,2],[3,4]]))
+        table = JSONTables.jsontable(text)
+        for column in (Tables.getcolumn(table, :a), Tables.getcolumn(table, 1), table.a)
+            @test eltype(column) == Tables.schema(table).types[1]
+            @test isequal(collect(column), expected)
+            @test isequal(copy(column), expected)
+        end
+    end
+end
+
 end

@@ -84,9 +84,10 @@ Tables.columnaccess(::Type{Table{true, T}}) where {T} = true
 Tables.columns(x::Table{true}) = x
 
 miss(x) = ifelse(x === nothing, missing, x)
-struct MissingVector{T} <: AbstractVector{T}
-    x::T
+struct MissingVector{T, S<:AbstractVector} <: AbstractVector{T}
+    x::S
 end
+MissingVector(x::AbstractVector{T}) where {T} = MissingVector{misselT(T), typeof(x)}(x)
 Base.IndexStyle(::Type{<:MissingVector}) = Base.IndexLinear()
 Base.size(x::MissingVector) = size(x.x)
 @inline Base.getindex(x::MissingVector, i::Int) = miss(x.x[i])
