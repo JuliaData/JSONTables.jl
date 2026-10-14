@@ -1,4 +1,4 @@
-using Test, JSONTables, Tables, JSON3
+using Test, JSONTables, Tables, JSON
 
 @testset "JSONTables" begin
 
@@ -94,10 +94,10 @@ ct = Tables.columntable(jt)
 
 @testset "row inputs and empty initial rows" begin
     text = "[{\"a\":1,\"b\":2},{\"a\":3,\"b\":4}]"
-    parsed = JSON3.read(text)
+    parsed = JSON.parse(text)
     concrete = typeof(parsed[1])[parsed...]
-    for input in (text, codeunits(text), IOBuffer(text), parsed,
-                  JSON3.Object[parsed...], concrete, view(concrete, 1:2))
+    symbols = [Dict(Symbol(k) => v for (k, v) in row) for row in parsed]
+    for input in (text, codeunits(text), IOBuffer(text), parsed, concrete, view(concrete, 1:2), symbols)
         @test Tables.columntable(JSONTables.jsontable(input)) == (a=[1, 3], b=[2, 4])
     end
     for text in ("[]", "[1,2]", "[{},1]", "[null]")
