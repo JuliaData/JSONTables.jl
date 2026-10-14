@@ -15,7 +15,7 @@ end
 jsontable(source; kwargs...) = jsontable(JSON3.read(source; kwargs...))
 
 misselT(::Type{T}) where {T} = T
-# Empty columns have no inferred value type for a table schema.
+# empty JSON arrays have eltype Union{}
 misselT(::Type{Union{}}) = Any
 misselT(::Type{Nothing}) = Missing
 misselT(::Type{Union{Nothing, T}}) where {T} = Union{Missing, T}

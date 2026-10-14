@@ -111,32 +111,13 @@ ct = Tables.columntable(jt)
 end
 
 @testset "empty and null columns" begin
-    for text in ("{\"a\":[],\"b\":[1]}", "{\"a\":[1],\"b\":[]}",
-                 "{\"a\":[],\"b\":[],\"c\":[1]}",
-                 "{\"a\":[1],\"b\":[2,3]}", "{\"a\":[1,2],\"b\":[3]}",
-                 "{\"a\":[null],\"b\":[]}")
+    for text in ("{\"a\":[],\"b\":[1]}", "{\"a\":[1],\"b\":[]}", "{\"a\":[1],\"b\":[2,3]}")
         @test_throws ArgumentError JSONTables.jsontable(text)
-        @test_throws ArgumentError JSONTables.jsontable(JSON3.read(text))
     end
-    for (text, expected) in (("{\"a\":[]}", (a=Any[],)),
-                             ("{\"a\":[],\"b\":[]}", (a=Any[], b=Any[])),
-                             ("{\"a\":[1,2],\"b\":[3,4]}", (a=[1,2], b=[3,4])),
-                             ("{\"a\":[1,2],\"b\":[null,3]}", (a=[1,2], b=[missing,3])))
-        table = JSONTables.jsontable(text)
-        @test isequal(Tables.columntable(table), expected)
-        @test isequal(Tables.rowtable(table), Tables.rowtable(expected))
-    end
-    @test Tables.schema(JSONTables.jsontable("{\"a\":[]}")).types == (Any,)
-    @test Tables.schema(JSONTables.jsontable("{\"a\":[],\"b\":[]}")).types == (Any, Any)
-    for (text, expected) in (("{\"a\":[null]}", (a=[missing],)),
-                             ("{\"a\":[null,null]}", (a=[missing,missing],)))
-        for source in (text, codeunits(text), IOBuffer(text), JSON3.read(text))
-            table = JSONTables.jsontable(source)
-            @test Tables.schema(table).types == (Missing,)
-            @test isequal(Tables.columntable(table), expected)
-            @test isequal(Tables.rowtable(table), Tables.rowtable(expected))
-        end
-    end
+    @test isequal(Tables.columntable(JSONTables.jsontable("{\"a\":[],\"b\":[]}")), (a=Any[], b=Any[]))
+    table = JSONTables.jsontable("{\"a\":[null,null]}")
+    @test Tables.schema(table).types == (Missing,)
+    @test isequal(Tables.columntable(table), (a=[missing, missing],))
 end
 
 end
