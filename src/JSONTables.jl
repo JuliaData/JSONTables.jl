@@ -35,12 +35,15 @@ jsontable(x::JSON3.Array) = throw(ArgumentError("input `JSON3.Array` must only h
 missT(::Type{Nothing}) = Missing
 missT(::Type{T}) where {T} = T
 
-function jsontable(x::AbstractVector{JSON3.Object})
+# Preserve object-array dispatch ahead of the invalid JSON array fallback.
+jsontable(x::JSON3.Array{JSON3.Object}) = invoke(jsontable, Tuple{AbstractVector{JSON3.Object}}, x)
+
+function jsontable(x::AbstractVector{<:JSON3.Object})
     names = Symbol[]
     seen = Set{Symbol}()
     types = Dict{Symbol, Type}()
-    for row in x
-        if isempty(names)
+    for (row_number, row) in enumerate(x)
+        if row_number == 1
             for (k, v) in row
                 push!(names, k)
                 types[k] = missT(typeof(v))

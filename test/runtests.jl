@@ -92,4 +92,22 @@ jt = JSONTables.jsontable(new_field_in_last_row)
 ct = Tables.columntable(jt)
 @test isequal(ct.c, [missing, 8])
 
+@testset "row inputs and empty initial rows" begin
+    text = "[{\"a\":1,\"b\":2},{\"a\":3,\"b\":4}]"
+    parsed = JSON3.read(text)
+    concrete = typeof(parsed[1])[parsed...]
+    for input in (text, codeunits(text), IOBuffer(text), parsed,
+                  JSON3.Object[parsed...], concrete, view(concrete, 1:2))
+        @test Tables.columntable(JSONTables.jsontable(input)) == (a=[1, 3], b=[2, 4])
+    end
+    for text in ("[]", "[1,2]", "[{},1]", "[null]")
+        @test_throws ArgumentError JSONTables.jsontable(text)
+    end
+    for (text, a) in (("[{},{\"a\":1}]", [missing, 1]), ("[{},{},{\"a\":null}]", [missing, missing, missing]))
+        table = JSONTables.jsontable(text)
+        @test Missing <: Tables.schema(table).types[1]
+        @test isequal(Tables.columntable(table).a, a)
+    end
+end
+
 end
