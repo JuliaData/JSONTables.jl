@@ -120,4 +120,15 @@ end
     @test isequal(Tables.columntable(table), (a=[missing, missing],))
 end
 
+@testset "column element types" begin
+    for (text, expected) in (("{\"a\":[1,2]}", [1, 2]),
+                             ("{\"a\":[1,null]}", [1, missing]),
+                             ("{\"a\":[null]}", [missing]),
+                             ("{\"a\":[]}", Any[]))
+        table = JSONTables.jsontable(text)
+        @test eltype(table.a) == Tables.schema(table).types[1]
+        @test isequal(collect(table.a), expected)
+    end
+end
+
 end
