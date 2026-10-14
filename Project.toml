@@ -1,7 +1,7 @@
 name = "JSONTables"
 uuid = "b9914132-a727-11e9-1322-f18e41205b0b"
 authors = ["Jacob Quinn <quinn.jacobd@gmail.com>"]
-version = "1.0.3"
+version = "1.1.0"
 
 [deps]
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
