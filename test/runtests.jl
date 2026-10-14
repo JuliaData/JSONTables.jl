@@ -110,4 +110,14 @@ ct = Tables.columntable(jt)
     end
 end
 
+@testset "empty and null columns" begin
+    for text in ("{\"a\":[],\"b\":[1]}", "{\"a\":[1],\"b\":[]}", "{\"a\":[1],\"b\":[2,3]}")
+        @test_throws ArgumentError JSONTables.jsontable(text)
+    end
+    @test isequal(Tables.columntable(JSONTables.jsontable("{\"a\":[],\"b\":[]}")), (a=Any[], b=Any[]))
+    table = JSONTables.jsontable("{\"a\":[null,null]}")
+    @test Tables.schema(table).types == (Missing,)
+    @test isequal(Tables.columntable(table), (a=[missing, missing],))
+end
+
 end
